@@ -2,13 +2,17 @@ package tenpo.base.template;
 
 import java.io.IOException;
 
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+
 public class Demo {
 
 	/**
 	 * @param args
 	 * @throws IOException
+	 * @throws InvalidFormatException
 	 */
-	public static void main(final String[] args) throws IOException {
+	public static void main(final String[] args) throws IOException, InvalidFormatException {
 		ExcelCreator templater = new ExcelCreator("src/tenpo/base/template/tokyo.new.xls");
 		templater.loadTemplate("src/tenpo/base/template/tokyo.template.xls");
 
@@ -31,8 +35,11 @@ public class Demo {
 			templater.copyRowStyle("main", 13+i, 12);
 		}
 
+		templater.saveFile();
+
+		templater.setBorder("main", 12, 7, ExcelCreator.Border.Bottom, HSSFCellStyle.BORDER_DOUBLE);
 		templater.renameSheet("data-2", "data");
-		templater.createSheet("data-3", "data-2");
+		templater.createSheet("data-4", "data-2");
 
 		templater.saveFile();
 	}

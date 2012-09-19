@@ -19,6 +19,7 @@ import org.apache.poi.ss.util.CellRangeAddress;
  */
 public class ExcelTemplateUtils {
 
+
 	 /** DEFAULT CONSTRUCTOR. */
 	 private ExcelTemplateUtils() {}
 
@@ -56,11 +57,16 @@ public class ExcelTemplateUtils {
 	 public static void copyRow(final HSSFRow newRow, final HSSFRow oldRow, final boolean copyStyle) {
 		 HSSFSheet srcSheet = oldRow.getSheet();
 		 HSSFSheet destSheet = newRow.getSheet();
+
+		 int j = oldRow.getFirstCellNum();
+		 if ( j<0 ) {j=0;}
+		 int count = oldRow.getLastCellNum();
+
 		 // manage a list of merged zone in order to not insert two times a merged zone
 		 Set<CellRangeAddressWrapper> mergedRegions = new TreeSet<CellRangeAddressWrapper>();
 	     newRow.setHeight(oldRow.getHeight());
 	     // pour chaque row
-	     for (int j = oldRow.getFirstCellNum(), count = oldRow.getLastCellNum(); j <= count; j++) {
+	     for (; j <= count; j++) {
 	         HSSFCell oldCell = oldRow.getCell(j);   // ancienne cell
 	         HSSFCell newCell = newRow.getCell(j);  // new cell
 	         if (oldCell != null) {
@@ -288,4 +294,3 @@ class CellRangeAddressWrapper implements Comparable<CellRangeAddressWrapper> {
     }
 
 }
-

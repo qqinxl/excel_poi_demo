@@ -1,0 +1,34 @@
+// 循环数据分类
+    ArrayList<ArrayList<String>> oldData = new ArrayList<ArrayList<String>>();
+	Map<String, ArrayList<ArrayList<String>>> dataGroubyAccountName = new HashMap<String, ArrayList<ArrayList<String>>>();
+
+	for (ArrayList<String> record : oldData) {
+		String accountName = ""; //
+		if (dataGroubyAccountName.containsKey(accountName)) {
+			dataGroubyAccountName.get(accountName).add(record);
+		} else {
+			ArrayList<ArrayList<String>> tmp = new ArrayList<ArrayList<String>>();
+			tmp.add(record);
+			dataGroubyAccountName.put(accountName, tmp);
+		}
+	}
+
+	for (Map.Entry<String, ArrayList<ArrayList<String>>> e : dataGroubyAccountName.entrySet()) {
+		String accountName = e.getKey();
+		ArrayList<ArrayList<String>> valueList = e.getValue();
+		
+		
+	}
+	
+
+// ExcelCreator
+  public void deleteSheet(final String sheet) {
+		HSSFSheet oldSheet = hssfWorkbook.getSheet(sheet);
+		if (oldSheet == null) {
+			throw new InvalidParameterException();
+		}
+		hssfWorkbook.removeSheetAt(hssfWorkbook.getSheetIndex(sheet));
+  }
+
+  //
+  select code, sum(number), price, sum(total), note, time from report group by code, price order by code, price; 

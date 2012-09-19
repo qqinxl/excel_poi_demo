@@ -4,16 +4,18 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.OutputStream;
 import java.math.BigDecimal;
 import java.security.InvalidParameterException;
 import java.util.Date;
 
 import org.apache.poi.hssf.usermodel.HSSFCell;
+import org.apache.poi.hssf.usermodel.HSSFCellStyle;
 import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 
 /**
  * @author kyou
@@ -21,8 +23,6 @@ import org.apache.poi.hssf.usermodel.HSSFWorkbook;
  */
 public class ExcelCreator {
 
-	/** InputStream */
-	private InputStream in = null;
 	/** HSSFWorkbook */
 	private HSSFWorkbook hssfWorkbook = null;
 	/** ファイル名 */
@@ -31,15 +31,21 @@ public class ExcelCreator {
 	/**
 	 * @param filename　ファイル名
 	 * @throws IOException　IOException
+	 * @throws InvalidFormatException
 	 */
-	public ExcelCreator(final String filename) throws IOException {
+	public ExcelCreator(final String filename) throws IOException, InvalidFormatException {
 		File file = new File(filename);
-		if (file.exists()) {
-			in = new FileInputStream(file);
-			hssfWorkbook = new HSSFWorkbook(in);
-		} else {
+		if (!file.exists()) {
 			hssfWorkbook = new HSSFWorkbook();
+			OutputStream out = new FileOutputStream(filename);
+			hssfWorkbook.write(out);
+	        out.close();
+	        file = new File(filename);
 		}
+
+		FileInputStream in = new FileInputStream(file);
+		hssfWorkbook = (HSSFWorkbook) WorkbookFactory.create(in);
+		in.close();
 
 		this.filename = filename;
 	}
@@ -47,20 +53,15 @@ public class ExcelCreator {
 	/**
 	 * @param filename Templateファイル名
 	 * @throws IOException IOException
+	 * @throws InvalidFormatException
 	 */
-	public void loadTemplate(final String filename) throws IOException {
-		InputStream temp = new FileInputStream(filename);
-		HSSFWorkbook tempBook = new HSSFWorkbook(temp);
-		for(int i = 0, count = tempBook.getNumberOfSheets() ; i < count; i++) {
-			HSSFSheet sheet = tempBook.getSheetAt(i);
-			String sheetName = sheet.getSheetName();
-			HSSFSheet createSheet = hssfWorkbook.getSheet(sheetName);
-			if (createSheet == null) {
-				createSheet = hssfWorkbook.createSheet(sheetName);
-			}
-			//すべてコピーする
-			ExcelTemplateUtils.copySheets(createSheet, sheet, true);
-		}
+	public void loadTemplate(final String filename) throws IOException, InvalidFormatException {
+		FileInputStream temp = new FileInputStream(filename);
+		hssfWorkbook = (HSSFWorkbook) WorkbookFactory.create(temp);
+
+		FileOutputStream out = new FileOutputStream(filename);
+		hssfWorkbook.write(out);
+        out.close();
 	}
 
 	/**
@@ -115,9 +116,6 @@ public class ExcelCreator {
 		OutputStream out = new FileOutputStream(filename);
 		hssfWorkbook.write(out);
         out.close();
-        if (in != null) {
-        	in.close();
-        }
 	}
 
 	/**
@@ -140,7 +138,35 @@ public class ExcelCreator {
 		if (oldRow == null) {
 			throw new InvalidParameterException();
 		}
-		ExcelTemplateUtils.copyRowStyle(newRow, oldRow);
+		copyRowStyle(newRow, oldRow);
+	}
+
+	/**
+	 * Styleをコピーする
+	 * @param sheetName シート名。シートが存在してない場合、Exceptionを発生する。
+	 * @param newRowNum 目標シート
+	 * @param oldSheetNameコピー元シート
+	 * @param oldRowNum コピー元シート
+	 */
+	public void copyRowStyle(final String sheetName, final int newRowNum, final String oldSheetName, final int oldRowNum) {
+		HSSFSheet sheet = hssfWorkbook.getSheet(sheetName);
+		HSSFSheet oldSheet = hssfWorkbook.getSheet(oldSheetName);
+		if (sheet == null) {
+			throw new InvalidParameterException();
+		}
+		if (oldSheet == null) {
+			throw new InvalidParameterException();
+		}
+
+		HSSFRow newRow = sheet.getRow(newRowNum);
+		if (newRow == null) {
+			newRow = sheet.createRow(sheet.getLastRowNum() + 1);
+		}
+		HSSFRow oldRow = oldSheet.getRow(oldRowNum);
+		if (oldRow == null) {
+			throw new InvalidParameterException();
+		}
+		copyRowStyle(newRow, oldRow);
 	}
 
 	/**
@@ -169,19 +195,87 @@ public class ExcelCreator {
 			throw new InvalidParameterException();
 		}
 		HSSFSheet newSheet = hssfWorkbook.getSheet(newSheetName);
-		if (newSheet == null) {
-			newSheet = hssfWorkbook.createSheet(newSheetName);
+		if (newSheet != null) {
+			return;
 		}
 		//すべてコピーする
-		ExcelTemplateUtils.copySheets(newSheet, oldSheet, true);
+		HSSFSheet newSheet2 = hssfWorkbook.cloneSheet(hssfWorkbook.getSheetIndex(templateSheetName));
+		renameSheet(newSheetName, newSheet2.getSheetName());
 	}
 
-	public void deleteSheet(final String sheet) {
-		HSSFSheet oldSheet = hssfWorkbook.getSheet(sheet);
+	public void deleteSheet(final String sheetName) {
+		HSSFSheet oldSheet = hssfWorkbook.getSheet(sheetName);
 		if (oldSheet == null) {
 			throw new InvalidParameterException();
 		}
-		hssfWorkbook.removeSheetAt(hssfWorkbook.getSheetIndex(sheet));
+		hssfWorkbook.removeSheetAt(hssfWorkbook.getSheetIndex(sheetName));
 	}
 
+
+	// templater.setBorder("main", 12, 7, ExcelCreator.Border.Bottom, HSSFCellStyle.BORDER_DOUBLE);
+	public void setBorder(final String sheetName, final int rowNum, final int cellNum, final Border border, final short borderSize) {
+		if (border == null) {
+			throw new InvalidParameterException();
+		}
+		HSSFSheet sheet = hssfWorkbook.getSheet(sheetName);
+		if (sheet == null) {
+			throw new InvalidParameterException();
+		}
+
+		HSSFRow row = sheet.getRow(rowNum);
+		if (row == null) {
+			row = sheet.createRow(rowNum);
+		}
+		HSSFCell cell = row.getCell(cellNum);
+		if (cell == null) {
+			cell = row.createCell(cellNum);
+		}
+		HSSFCellStyle cellStyle = cell.getCellStyle();
+		if (border.equals(Border.TOP)) {
+			cellStyle.setBorderTop(borderSize);
+		} else if (border.equals(Border.Bottom)) {
+			cellStyle.setBorderBottom(borderSize);
+		} else if (border.equals(Border.Left)) {
+			cellStyle.setBorderLeft(borderSize);
+		} else if (border.equals(Border.Right)) {
+			cellStyle.setBorderRight(borderSize);
+		}
+	}
+	 /**
+	  * @param oldRow コピー元シート
+	  * @param newRow 目標シート
+	  */
+	 private void copyRowStyle(final HSSFRow newRow, final HSSFRow oldRow) {
+		 // manage a list of merged zone in order to not insert two times a merged zone
+		 newRow.setHeight(oldRow.getHeight());
+		 // pour chaque row
+		 for (int j = oldRow.getFirstCellNum(); j <= oldRow.getLastCellNum(); j++) {
+			 HSSFCell oldCell = oldRow.getCell(j);   // ancienne cell
+			 HSSFCell newCell = newRow.getCell(j);  // new cell
+			 if (oldCell != null) {
+				 if (newCell == null) {
+					 newCell = newRow.createCell(j);
+				 }
+				 // copy chaque cell
+				 copyCellStyle(newCell, oldCell);
+			 }
+		 }
+	 }
+
+	 /**
+	  * @param newCell 目標シート
+	  * @param oldCell コピー元シート
+	  */
+	 private void copyCellStyle(final HSSFCell newCell, final HSSFCell oldCell) {
+        HSSFCellStyle newCellStyle = newCell.getSheet().getWorkbook().createCellStyle();
+        newCellStyle.cloneStyleFrom(oldCell.getCellStyle());
+        newCell.setCellStyle(newCellStyle);
+	 }
+
+	 public static enum Border {
+		 TOP,
+		 Bottom,
+		 Right,
+		 Left;
+	 }
 }
