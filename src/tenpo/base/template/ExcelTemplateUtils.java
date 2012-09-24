@@ -17,6 +17,7 @@ import org.apache.poi.ss.util.CellRangeAddress;
  * @author kyou
  * @link http://www.coderanch.com/t/420958/open-source/Copying-sheet-excel-file-another
  */
+@Deprecated
 public class ExcelTemplateUtils {
 
 
