@@ -79,7 +79,7 @@ public class ExcelCreator {
 
 		HSSFRow row = sheet.getRow(rowNum);
 		if (row == null) {
-			row = sheet.createRow(sheet.getLastRowNum() + 1);
+			row = sheet.createRow(rowNum);
 		}
 		HSSFCell cell = row.getCell(cellNum);
 		if (cell == null) {
@@ -132,7 +132,7 @@ public class ExcelCreator {
 
 		HSSFRow newRow = sheet.getRow(newRowNum);
 		if (newRow == null) {
-			newRow = sheet.createRow(sheet.getLastRowNum() + 1);
+			newRow = sheet.createRow(newRowNum);
 		}
 		HSSFRow oldRow = sheet.getRow(oldRowNum);
 		if (oldRow == null) {
