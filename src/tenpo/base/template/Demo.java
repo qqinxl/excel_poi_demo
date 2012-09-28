@@ -1,5 +1,7 @@
 package tenpo.base.template;
 
+import java.awt.Desktop;
+import java.io.File;
 import java.io.IOException;
 
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
@@ -42,5 +44,13 @@ public class Demo {
 		templater.createSheet("data-4", "data-2");
 
 		templater.saveFile();
+
+		Desktop.getDesktop().open(new File("C:/test test test/tokyo new test.xls"));
+
+        try{
+            Runtime.getRuntime().exec("cmd /c start C:\\\"test test test\"\\\"tokyo new test.xls\"");
+        }catch(IOException  e){
+            e.printStackTrace();
+        }
 	}
 }
