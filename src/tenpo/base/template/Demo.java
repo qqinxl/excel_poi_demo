@@ -47,10 +47,27 @@ public class Demo {
 
 		Desktop.getDesktop().open(new File("C:/test test test/tokyo new test.xls"));
 
+//        try{
+//            Runtime.getRuntime().exec("cmd /c start C:\\\"test test test\"\\\"tokyo new test.xls\"");
+//        }catch(IOException  e){
+//            e.printStackTrace();
+//        }
+
+		String filaname = "\"tokyo new test.xls\"";
+        filaname = "C:\\\"test test test\"\\" + filaname;
         try{
-            Runtime.getRuntime().exec("cmd /c start C:\\\"test test test\"\\\"tokyo new test.xls\"");
+            Runtime.getRuntime().exec("cmd /c start " + filaname);
         }catch(IOException  e){
             e.printStackTrace();
         }
+
+//        String virefilecmd = "C:\\test test test\\viewfile.cmd";
+//        String virefilecmd = "start";
+//        String[] cmd = {virefilecmd, filaname};
+//        try{
+//        	Runtime.getRuntime().exec(cmd);
+//        }catch(IOException  e){
+//        	e.printStackTrace();
+//        }
 	}
 }
