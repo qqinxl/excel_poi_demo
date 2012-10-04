@@ -272,6 +272,31 @@ public class ExcelCreator {
         newCell.setCellStyle(newCellStyle);
 	 }
 
+	 public void copyCellStyle(final String sheetName, final int newY, final int newX, final int oldY, final int oldX) {
+		HSSFSheet sheet = hssfWorkbook.getSheet(sheetName);
+		if (sheet == null) {
+			throw new InvalidParameterException();
+		}
+		HSSFRow newRow = sheet.getRow(newY);
+		if (newRow == null) {
+			throw new InvalidParameterException();
+		}
+		HSSFCell newCell = newRow.getCell(newX);
+		if (newCell == null) {
+			throw new InvalidParameterException();
+		}
+		HSSFRow oldRow = sheet.getRow(oldY);
+		if (oldRow == null) {
+			throw new InvalidParameterException();
+		}
+		HSSFCell oldCell = oldRow.getCell(oldX);
+		if (oldCell == null) {
+			throw new InvalidParameterException();
+		}
+
+		copyCellStyle(newCell, oldCell);
+	 }
+
 	 public static enum Border {
 		 TOP,
 		 Bottom,
